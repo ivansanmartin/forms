@@ -2,13 +2,13 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from app.services.form_service import FormService
 from app.models.form_model import Form
+from app.schemas.form_update import FormUpdate
 
 router = APIRouter()
 
 @router.get("/forms/{form_id}", status_code=status.HTTP_200_OK)
 async def get_form(form_id):
     form = await FormService.get_form(form_id)
-    
     if not form:
         return JSONResponse(
             status_code=404,
@@ -23,9 +23,11 @@ async def create_form(form: Form):
     return form
 
 @router.patch("/forms/{form_id}")
-async def patch_form():
-    return {}
+async def patch_form(form_id, form_update: FormUpdate):
+    form_updated = await FormService.patch_form(form_id, form_update)
+    return form_updated
 
 @router.delete("/forms/{form_id}")
-async def delete_form():
-    return {}
+async def delete_form(form_id):
+    result = await FormService.delete_form(form_id)
+    print(result)
