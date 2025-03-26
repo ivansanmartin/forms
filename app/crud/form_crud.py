@@ -6,18 +6,17 @@ import bson
 class FormCrud():
     
     @staticmethod
-    async def get_form():
+    async def get_form(form_id):
         collection = MongoDBManager.get_collection("forms")
+        result = await collection.find_one({ "form_id": form_id}, {"_id": 0 })
         
-        result = collection.find_one()
         return result
     
     @staticmethod
     async def create_form(form: Form):
         collection = MongoDBManager.get_collection("forms")
-        
-        print(form)
         await collection.insert_one(form.model_dump())
+        
 
 
 
