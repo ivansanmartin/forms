@@ -13,6 +13,7 @@ class FormService():
             print(form.form_id)
             print("fields of forms is not empty")
             print(form.fields)
+        await FormCrud.create_form(form)
     
     @staticmethod
     async def update_form():
