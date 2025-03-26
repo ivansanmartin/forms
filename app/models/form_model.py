@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from enums.form_status import FormStatus
+from app.enums.form_status import FormStatus
 import uuid
 from uuid import UUID
-from models.field_model import Fields
+from app.models.field_model import Fields
 
 class Form(BaseModel):
     form_id: UUID = Field(default_factory=uuid.uuid4)
@@ -15,4 +15,4 @@ class Form(BaseModel):
     is_public: bool = Field(default=False)
     requires_auth: bool = Field(default=False)
     status: FormStatus
-    fields: list[Fields]
+    fields: list[Fields] = []
