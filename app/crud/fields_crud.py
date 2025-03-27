@@ -1,6 +1,6 @@
 from app.db.mongodb_manager import MongoDBManager
 from app.models.field_model import Fields
-from app.schemas.field_update import FieldsUpdate
+from pymongo import ReturnDocument
 from pymongo.results import UpdateResult
 
 class FieldCrud:
@@ -17,7 +17,7 @@ class FieldCrud:
         create_form_fields(form_id: str, field: Fields) -> UpdateResult:
             Adds a new field to an existing form.
 
-        patch_form_field(form_id: str, field_id: str, fields: FieldsUpdate) -> dict | None:
+        patch_form_field(form_id: str, field_id: str, fields: dict) -> dict | None:
             Updates a specific field within a form.
 
         delete_form_field(form_id: str, field_id: str) -> UpdateResult:
@@ -63,13 +63,13 @@ class FieldCrud:
         Args:
             form_id (str): The unique identifier of the form.
             field_id (str): The unique identifier of the field to update.
-            fields (FieldsUpdate): The updated field data.
+            fields (dict): The updated field data.
 
         Returns:
             dict | None: The updated form document if successful, otherwise None.
         """
         collection = MongoDBManager.get_collection("forms")
-        result = await collection.find_one_and_update({"form_id": form_id, "fields.field_id": field_id}, {"$set": {f"fields.$.{key}": value for key, value in fields.items()}}, {"_id": 0})
+        result = await collection.find_one_and_update({"form_id": form_id, "fields.field_id": field_id}, {"$set": {f"fields.$.{key}": value for key, value in fields.items()}}, {"_id": 0}, return_document=ReturnDocument.AFTER)
         
         return result
     
@@ -85,4 +85,7 @@ class FieldCrud:
         Returns:
             UpdateResult: The result of the update operation.
         """
-        pass
+        collection = MongoDBManager.get_collection("forms")
+        result = await collection.find_one_and_update({"form_id": form_id}, {"$pull": {f"fields": {"field_id": field_id}}}, {"_id": 0}, return_document=ReturnDocument.AFTER)
+        
+        return result
