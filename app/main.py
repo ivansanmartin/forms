@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.api.v1.endpoints.forms import router as forms_router
+from app.api.v1.endpoints.fields import router as fields_router
 from app.db.mongodb_manager import MongoDBManager
 from contextlib import asynccontextmanager
 
@@ -14,6 +15,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(forms_router, prefix="/api/v1")
+app.include_router(fields_router, prefix="/api/v1")
 
 @app.get("/api/check")
 def check_api():

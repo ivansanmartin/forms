@@ -6,7 +6,6 @@ from typing import Optional
 
 class Fields(BaseModel):
     field_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    form_id: str = Field(description="Form id reference")
     question: str = Field(min_length=2, max_length=100)
     description: Optional[str] = Field(min_length=2, max_length=100)
     type: Types
