@@ -28,7 +28,14 @@ async def create_form_fields(form_id, field: Fields):
 async def update_form_field(form_id, field_id, fields: FieldsUpdate):
     print(form_id, field_id, fields)
     result = await FieldService.patch_form_field(form_id, field_id, fields)
-    return {}
+    
+    if result:
+        return result
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"ok": False, "message": "No form or field found"}
+        )
 
 @router.delete("/forms/{form_id}/fields/{field_id}")
 async def delete_form_field(form_id, field_id):

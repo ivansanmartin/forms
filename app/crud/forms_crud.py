@@ -2,6 +2,7 @@ from app.db.mongodb_manager import MongoDBManager
 from app.models.form_model import Form
 from app.schemas.form_update import FormUpdate
 from pymongo.results import DeleteResult
+from pymongo import ReturnDocument
 
 class FormCrud:
     """
@@ -66,12 +67,14 @@ class FormCrud:
             dict | None: The updated form document if successful, otherwise None.
         """
         collection = MongoDBManager.get_collection("forms")
-        await collection.update_one(
+        
+        new_form = await collection.find_one_and_update(
             {"$and": [{"form_id": form_id}, {"title": form_update["title"]}]},
-            {"$set": form_update}
+            {"$set": form_update}, 
+            {"_id": 0},
+            return_document=ReturnDocument.AFTER
         )
 
-        new_form = await collection.find_one({"form_id": form_id}, {"_id": 0})
         return new_form
 
     @staticmethod

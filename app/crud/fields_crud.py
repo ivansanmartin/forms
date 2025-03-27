@@ -69,8 +69,8 @@ class FieldCrud:
             dict | None: The updated form document if successful, otherwise None.
         """
         collection = MongoDBManager.get_collection("forms")
-        result = await collection.update_one({"form_id": form_id, "fields.field_id": field_id}, {"$set": {f"fields.$.{key}": value for key, value in fields.items()}})
-
+        result = await collection.find_one_and_update({"form_id": form_id, "fields.field_id": field_id}, {"$set": {f"fields.$.{key}": value for key, value in fields.items()}}, {"_id": 0})
+        
         return result
     
     @staticmethod
