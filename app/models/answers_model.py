@@ -1,7 +1,11 @@
 from pydantic import BaseModel, Field
-from uuid import UUID
-from typing import Union
+from datetime import datetime
+from app.models.answer_model import Answer
 
-class Answer(BaseModel):
-    field_id: UUID
-    answer: Union[str, int, list]
+
+class Answers(BaseModel):
+    submitted_at: datetime = Field(default_factory=datetime.now)
+    answers: list[Answer]
+    class Config:
+        extra = "allow"
+    

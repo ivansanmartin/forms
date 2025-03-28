@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from app.enums.types import Types
 import uuid
-from uuid import UUID
 from typing import Optional
 
 class Fields(BaseModel):
