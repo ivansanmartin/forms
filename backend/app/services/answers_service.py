@@ -1,5 +1,9 @@
 from app.models.answers_model import Answers
 from pika.adapters.blocking_connection import BlockingChannel
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class AnswerService:
     """
@@ -34,7 +38,7 @@ class AnswerService:
         """
         channel.basic_publish(
             exchange="",
-            routing_key="answers",
+            routing_key=os.getenv("RABBITMQ_QUEUE"),
             body=answers.model_dump_json()
         )
         print("[x] Sent result to consumer")
