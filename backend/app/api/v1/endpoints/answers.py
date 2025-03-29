@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from app.models.answers_model import Answers
 from app.models.answer_model import Answer
 from app.broker.rabbitmq_broker import RabbitMQ
-import ast
+from app.services.answers_service import AnswerService
 
 router = APIRouter()
 
@@ -21,13 +21,8 @@ async def create_fields_answers(form_id, answers: Answers):
     
     channel = RabbitMQ.get_channel()
     
-    channel.basic_publish(
-        exchange="",
-        routing_key="answers",
-        body=str(answers.model_dump())
-    )
-    
-    print("[x] Sent result to consumer")
+    AnswerService.send_message_worker(channel, answers)
+
     
     return answers
         

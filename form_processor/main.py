@@ -1,26 +1,67 @@
-from broker.rabbitmq_broker import RabbitMQ
-import pika
+import asyncio
+import json
 import os
+import pika
+from pika.adapters.asyncio_connection import AsyncioConnection
 from dotenv import load_dotenv
+from db.mongodb_manager import MongoDBManager
 
 load_dotenv()
 
-def start_rabbitmq():
-    credentials = pika.PlainCredentials(username=os.getenv("RABBITMQ_USERNAME"), password=os.getenv("RABBITMQ_PASSWORD"))
-    connection_parameters = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST"), port=os.getenv("RABBITMQ_PORT"), virtual_host=os.getenv("RABBITMQ_VIRTUALHOST"), credentials=credentials)
-    channel = RabbitMQ.create_connection(connection_parameters)
-    channel.queue_declare(os.getenv("RABBITMQ_QUEUE"))
-    
-    return channel
-    
+async def init_mongodb():
+    await MongoDBManager.create_connection(
+        os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE")
+    )
+
+async def insert_document(collection, data):
+    await collection.insert_one(data)
+
 def callback(ch, method, properties, body):
-    print(f" [x] Received {body}")
+    try:
+        collection = MongoDBManager.get_collection("answers")
+        data = json.loads(body.decode("utf-8"))
+
+        asyncio.get_running_loop().create_task(insert_document(collection, data))
+
+        print(f" [x] Document inserted in MongoDB: {data}")
+    except Exception as e:
+        print(f"Error processing message: {e}")
+
+async def init_listen_rabbitmq():
+    credentials = pika.PlainCredentials(
+        username=os.getenv("RABBITMQ_USERNAME"),
+        password=os.getenv("RABBITMQ_PASSWORD")
+    )
     
+    connection_parameters = pika.ConnectionParameters(
+        host=os.getenv("RABBITMQ_HOST"),
+        port=int(os.getenv("RABBITMQ_PORT")),
+        virtual_host=os.getenv("RABBITMQ_VIRTUALHOST"),
+        credentials=credentials
+    )
+
+    def on_connection_open(connection):
+        print("[RabbitMQ] Broker connection successfully")
+        connection.channel(on_open_callback=on_channel_open)
+
+    def on_channel_open(channel):
+        print("[RabbitMQ] Channel opened")
+        channel.queue_declare(queue=os.getenv("RABBITMQ_QUEUE"))
+        channel.basic_consume(
+            queue=os.getenv("RABBITMQ_QUEUE"),
+            auto_ack=True,
+            on_message_callback=callback 
+        )
     
+    AsyncioConnection(
+        connection_parameters, on_open_callback=on_connection_open
+    )
+
+    await asyncio.Future()
+
+async def main():
+    await init_mongodb()
+    await init_listen_rabbitmq()
+
 if __name__ == "__main__":
-    channel = start_rabbitmq()
-    channel.basic_consume(queue=os.getenv("RABBITMQ_QUEUE"), auto_ack=True, on_message_callback=callback)
-    
-    print(' [*] Waiting for messages. To exit press CTRL+C')
-    
-    channel.start_consuming()
+    asyncio.run(main()) 
