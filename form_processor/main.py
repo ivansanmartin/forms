@@ -14,6 +14,15 @@ async def init_mongodb():
     )
 
 async def insert_document(collection, data):
+    print(data)
+    exist_preview_answers = await collection.find_one({"form_id": data["form_id"]})
+    
+    if (exist_preview_answers):
+        form_id = data["form_id"]
+        data.pop("form_id", None)
+        await collection.update_one({"form_id": form_id}, {"$push": {"answers": {"$each": data["answers"]}}})
+        return
+        
     await collection.insert_one(data)
 
 def callback(ch, method, properties, body):
@@ -23,7 +32,7 @@ def callback(ch, method, properties, body):
 
         asyncio.get_running_loop().create_task(insert_document(collection, data))
 
-        print(f" [x] Document inserted in MongoDB: {data}")
+        print(f" [x] Document inserted in MongoDB")
     except Exception as e:
         print(f"Error processing message: {e}")
 

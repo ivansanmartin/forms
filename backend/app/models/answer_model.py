@@ -9,8 +9,8 @@ class Answer(BaseModel):
     type: ValidateTypes
     value: Union[str, int, bool, list]
     
-    def validate_value_type(self):
+    def validate_value_type(self, position):
         expected_type = ValidateTypes[str(self.type.value).upper()].data_type
         
         if not isinstance(self.value, expected_type):
-            return JSONResponse({"error": f"Invalid value: {self.value} should be of type {expected_type}"})
+            return JSONResponse({"error": f"Invalid value in position {position}: {self.value} should be of type {expected_type}"})
