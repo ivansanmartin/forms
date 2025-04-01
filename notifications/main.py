@@ -13,7 +13,7 @@ async def init_mongodb():
         os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE")
     )
 
-async def insert_document(collection, data):
+async def send_notification(collection, data):
     print(data)
     exist_preview_answers = await collection.find_one({"form_id": data["form_id"]})
     
@@ -25,14 +25,21 @@ async def insert_document(collection, data):
         
     await collection.insert_one(data)
 
+"""
+TODO:
+
+Validate specific platform notification - Discord | Slack
+
+"""
+
 def callback(ch, method, properties, body):
     try:
         collection = MongoDBManager.get_collection(os.getenv("MONGODB_COLLECTION"))
         data = json.loads(body.decode("utf-8"))
 
-        asyncio.get_running_loop().create_task(insert_document(collection, data))
+        asyncio.get_running_loop().create_task(send_notification(collection, data))
 
-        print(f" [x] Document inserted in MongoDB")
+        print(f" [x] Notification sended")
     except Exception as e:
         print(f"Error processing message: {e}")
 
