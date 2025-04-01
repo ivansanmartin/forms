@@ -24,6 +24,11 @@ async def create_form(form: Form):
         if not_valid:
             return not_valid
         
+    if form.slack_notification:
+        not_valid = await form.slack_notification.validate_webhook(form.title)
+        if not_valid:
+            return not_valid
+    
     form = await FormService.create_form(form)
     return form
 

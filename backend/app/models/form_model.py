@@ -3,6 +3,7 @@ from datetime import datetime
 from app.enums.form_status import FormStatus
 from app.models.field_model import Fields
 from app.models.discord_notification_model import DiscordNotify
+from app.models.slack_notification_model import SlackNotify
 from typing import Optional
 import uuid
 
@@ -16,5 +17,6 @@ class Form(BaseModel):
     is_public: bool = Field(default=False)
     requires_auth: bool = Field(default=False)
     discord_notification: Optional[DiscordNotify] = None
+    slack_notification: Optional[SlackNotify] = None
     status: FormStatus
     fields: list[Fields] = []
