@@ -85,7 +85,7 @@ class RabbitMQ:
         return cls._instance
 
     @classmethod
-    async def send_message(cls, submitted):
+    async def send_message(cls, submitted, routing_key=None):
         """
         Publishes a JSON message to the RabbitMQ queue.
         Reconnects if the channel is closed.
@@ -98,7 +98,6 @@ class RabbitMQ:
 
         cls._channel.basic_publish(
             exchange="",
-            routing_key=os.getenv("RABBITMQ_QUEUE"),
+            routing_key=routing_key,
             body=submitted
         )
-        print("Message sent to RabbitMQ")

@@ -25,7 +25,9 @@ class AnswerService:
         if not form:
             return JSONResponse({"ok": False, "message": "No form found"})
 
-        await RabbitMQ.send_message(submitted.model_dump_json())
+        await RabbitMQ.send_message(submitted.model_dump_json(), "mongodb_queue")
+        await RabbitMQ.send_message(submitted.form_id, "notifications")
+        
         return submitted
             
 
