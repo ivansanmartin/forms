@@ -52,7 +52,7 @@ class FormCrud:
             None
         """
         collection = MongoDBManager.get_collection("forms")
-        await collection.insert_one(form.model_dump())
+        await collection.insert_one(form.model_dump(exclude_none=True))
 
     @staticmethod
     async def patch_form(form_id: str, form_update: dict) -> dict | None:

@@ -19,6 +19,11 @@ async def get_form(form_id):
     
 @router.post("/forms", status_code=status.HTTP_201_CREATED)
 async def create_form(form: Form):
+    if form.discord_notification:
+        not_valid = form.discord_notification.validate_webhook(form.title)
+        if not_valid:
+            return not_valid
+        
     form = await FormService.create_form(form)
     return form
 
