@@ -1,5 +1,7 @@
-from app.models.answers_model import Answers
-from pika.adapters.blocking_connection import BlockingChannel
+from app.models.submitted_model import Submitted
+from app.broker.rabbitmq_broker import RabbitMQ
+from app.crud.forms_crud import FormCrud
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import os
 
@@ -12,33 +14,17 @@ class AnswerService:
 
     Methods:
     --------
-    send_message_worker(channel: BlockingChannel, answers: Answers):
-        Sends a message to the consumer with the answers serialized in JSON format.
+    send_message_worker(submitted: Submitted):
+        Sends a message to the consumer with the submitted serialized in JSON format.
     """
     
     @staticmethod
-    def send_message_worker(channel: BlockingChannel, answers: Answers):
-        """
-        Sends a message to the consumer with the answer data.
-        
-        This method publishes a message to the 'answers' queue in RabbitMQ. The message
-        contains the answer data serialized in JSON format, using the `model_dump_json` 
-        method of the `Answers` class.
+    async def send_message_worker(submitted: Submitted):
+        form = await FormCrud.get_form(submitted.form_id)
+        if not form:
+            return JSONResponse({"ok": False, "message": "No form found"})
 
-        Parameters:
-        -----------
-        channel (BlockingChannel): The communication channel with RabbitMQ used to 
-                                   send the message. This channel is expected to be 
-                                   of type `BlockingChannel` from the `pika` library.
-                                   
-        answers (Answers): An instance of the `Answers` class that holds the 
-                           data to be sent to the consumer. The data is serialized 
-                           using the `model_dump_json` method into JSON format.
-        
-        """
-        channel.basic_publish(
-            exchange="",
-            routing_key=os.getenv("RABBITMQ_QUEUE"),
-            body=answers.model_dump_json()
-        )
-        print("[x] Sent result to consumer")
+        await RabbitMQ.send_message(submitted.model_dump_json())
+        return submitted
+            
+

@@ -10,8 +10,6 @@ router = APIRouter()
 async def create_fields_answers(form_id, submitted: Submitted):
     submitted.form_id = form_id
     
-    print(submitted)
-    
     for index in range(0, len(submitted.answers)):
         for answer in submitted.answers[index].response:
             answer_model = Answer(**dict(answer))
@@ -21,15 +19,8 @@ async def create_fields_answers(form_id, submitted: Submitted):
                 continue
             
             return result
-        
 
-    
-    channel = RabbitMQ.get_channel()
-    
-    print(submitted)
-    
-    AnswerService.send_message_worker(channel, submitted)
+    result = await AnswerService.send_message_worker(submitted)
 
-    
-    return submitted
+    return result
         

@@ -14,14 +14,14 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await MongoDBManager.create_connection(os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE"))
-    credentials = pika.PlainCredentials(username=os.getenv("RABBITMQ_USERNAME"), password=os.getenv("RABBITMQ_PASSWORD"))
-    connection_parameters = pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST"), port=os.getenv("RABBITMQ_PORT"), virtual_host=os.getenv("RABBITMQ_VIRTUALHOST"), credentials=credentials)
-    channel = RabbitMQ.create_connection(connection_parameters)
-    channel.queue_declare(os.getenv("RABBITMQ_QUEUE"))
     
+    app.state.rabbitmq = RabbitMQ()
+    await app.state.rabbitmq.connect()
+
     yield
-    
+
     await MongoDBManager.close_connection()
+
 
 app = FastAPI(lifespan=lifespan)
 
