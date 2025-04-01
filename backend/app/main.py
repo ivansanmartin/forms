@@ -7,7 +7,6 @@ from app.broker.rabbitmq_broker import RabbitMQ
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import os
-import pika
 
 load_dotenv()
 
@@ -15,13 +14,12 @@ load_dotenv()
 async def lifespan(app: FastAPI):
     await MongoDBManager.create_connection(os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE"))
     
-    app.state.rabbitmq = RabbitMQ()
-    await app.state.rabbitmq.connect()
+    rabbitmq = RabbitMQ()
+    await rabbitmq.connect()
 
     yield
 
     await MongoDBManager.close_connection()
-
 
 app = FastAPI(lifespan=lifespan)
 

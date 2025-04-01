@@ -21,6 +21,7 @@ class AnswerService:
     @staticmethod
     async def send_message_worker(submitted: Submitted):
         form = await FormCrud.get_form(submitted.form_id)
+        
         if not form:
             return JSONResponse({"ok": False, "message": "No form found"})
 
