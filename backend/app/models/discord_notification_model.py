@@ -1,15 +1,16 @@
-from pydantic import BaseModel, UrlConstraints, field_validator
+from pydantic import BaseModel, field_validator, HttpUrl
 from pydantic_core import Url
 from typing_extensions import Annotated
 from fastapi.responses import JSONResponse
 import aiohttp
 
 class DiscordNotify(BaseModel):
-    webhook_url: Annotated[Url, UrlConstraints(allowed_schemes=["https"])]
-    
-    @field_validator("webhook_url")
-    def convert_url_to_str(cls, value):
-        return str(value)
+    webhook_url: str
+
+    @field_validator("webhook_url", mode="before")
+    @classmethod
+    def validate_url(cls, value):
+        return str(HttpUrl(value))
     
     async def validate_webhook(self, form_name):        
         try:

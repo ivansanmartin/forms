@@ -14,13 +14,12 @@ async def init_mongodb():
     await MongoDBManager.create_connection(
         os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE")
     )
-
-async def send_notification(collection, form_id):
-    form = await collection.find_one({"form_id": form_id})
     
-    if form and "discord_notification" in form:
-        try:
-            async with aiohttp.ClientSession() as session:
+async def send_discord_notification(form):
+    try:
+        await asyncio.sleep(3)
+        async with aiohttp.ClientSession() as session:
+            while True:
                 async with session.post(form["discord_notification"]["webhook_url"], json={
                     "username": "Form Notification",
                     "embeds": [
@@ -31,45 +30,60 @@ async def send_notification(collection, form_id):
                         }
                     ]
                 }) as response:
-                    
+
                     response_status = response.status
                     headers = response.headers
 
-                    remaining = int(headers.get("X-RateLimit-Remaining", 1))
-                    reset_time = float(headers.get("X-RateLimit-Reset", time.time()))
-                    retry_after = headers.get("Retry-After")
-
-                    if remaining == 0:
-                        wait_time = float(retry_after) / 1000 if retry_after else reset_time - time.time()
-                        print(f"Rate limit reached. Retrying in {wait_time:.2f} seconds...")
-                        await asyncio.sleep(max(wait_time, 0))
-
                     if response_status == 204:
-                        print("Notification sended.")
+                        print("[Discord] Notification sended.")
+                        break
 
-                    if response_status == 429:
-                        wait_time = float(retry_after) / 1000 if retry_after else reset_time - time.time()
-                        print(f"Rate limit reached. Retrying in {wait_time:.2f} seconds...")
-                        await asyncio.sleep(max(wait_time, 0))
+                    elif response_status == 429:
+                        retry_after = float(headers.get("Retry-After", 0)) / 1000
+                        print(f"Rate limit reached. Retrying in {retry_after:.2f} seconds...")
+                        await asyncio.sleep(retry_after)
+                    else:
+                        response_text = await response.text()
+                        print(f"Failed to send Discord notification: {response_status} - {response_text}")
+                        break 
 
-        except aiohttp.ClientError as err:
-            return {"ok": False, "message": f"Request error: {err}", "status_code": 500}
+    except aiohttp.ClientError as err:
+        print(f"Request error: {err}")
 
-"""
-TODO:
+async def send_slack_notification(form):
+    try:
+        await asyncio.sleep(3)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(form["slack_notification"]["webhook_url"], json={
+                "text": f"A new answer has been submitted to: *{form['title']}*"
+            }) as response:
+                if response.ok:
+                    print("[Slack] Notification sended.")
 
-Validate specific platform notification - Discord | Slack
+    except aiohttp.ClientError as err:
+        return {"ok": False, "message": f"Request error: {err}", "status_code": 500}
 
-"""
+async def send_notification(collection, form_id):
+    form = await collection.find_one({"form_id": form_id})
+    
+    tasks = []
+
+    if form:
+        if "discord_notification" in form:
+            tasks.append(send_discord_notification(form))
+
+        if "slack_notification" in form:
+            tasks.append(send_slack_notification(form))
+
+    if tasks:
+        await asyncio.gather(*tasks)
+
 
 def callback(ch, method, properties, body):
     try:
         collection = MongoDBManager.get_collection(os.getenv("MONGODB_COLLECTION"))
         form_id = body.decode("utf-8")
-
         asyncio.get_running_loop().create_task(send_notification(collection, form_id))
-
-        print(f" [x] Notification sended")
     except Exception as e:
         print(f"Error processing message: {e}")
 
