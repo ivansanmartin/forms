@@ -9,6 +9,7 @@ import uuid
 
 class Form(BaseModel):
     form_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    public_code: str = Field(default_factory=lambda: str(uuid.uuid4().hex)[:6])
     title: str = Field(description="Form title", min_length=2, max_length=100)
     description: str = Field(description="Form description", min_length=2, max_length=100)
     created_by: str = Field(description="Form creator", min_length=2, max_length=100)
