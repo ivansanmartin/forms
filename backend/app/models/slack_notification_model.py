@@ -16,7 +16,7 @@ class SlackNotify(BaseModel):
         try:
             async with aiohttp.ClientSession() as session:
                 payload = {
-                    "text": f"Webhook validated: now receiving notifications from the *{form_name}*",
+                    "text": f"Webhook validated: now receiving notifications from the form: *{form_name}*",
                 }
                 async with session.post(self.webhook_url, json=payload) as response:
                     if not response.ok:

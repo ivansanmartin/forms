@@ -25,7 +25,7 @@ async def send_discord_notification(form):
                     "embeds": [
                         {
                             "title": "Notification",
-                            "description": f"A new answer has been submitted to: **{form['title']}**",
+                            "description": f"A new answer has been submitted to form: **{form['title']}**",
                             "color": 5763719
                         }
                     ]
@@ -55,7 +55,7 @@ async def send_slack_notification(form):
         await asyncio.sleep(3)
         async with aiohttp.ClientSession() as session:
             async with session.post(form["slack_notification"]["webhook_url"], json={
-                "text": f"A new answer has been submitted to: *{form['title']}*"
+                "text": f"A new answer has been submitted to form: *{form['title']}*"
             }) as response:
                 if response.ok:
                     print("[Slack] Notification sended.")

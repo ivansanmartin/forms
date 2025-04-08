@@ -20,7 +20,7 @@ class DiscordNotify(BaseModel):
                     "embeds": [
                         {
                             "title": "Webhook validation",
-                            "description": f"Webhook validated: now receiving notifications from the **{form_name}**",
+                            "description": f"Webhook validated: now receiving notifications from the form: **{form_name}**",
                             "color": 5763719
                         }
                     ]
