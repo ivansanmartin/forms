@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.collection import Collection
 from typing import Optional, Any
 
 class MongoDBManager():
@@ -28,7 +29,7 @@ class MongoDBManager():
             print("[MongoDB] error getting database, the connection is wrong.")
         
     @classmethod
-    def get_collection(cls, collection_name: str):
+    def get_collection(cls, collection_name: str) -> Collection:
         """Get a collection of database after initialize
 
         Args:
