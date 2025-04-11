@@ -1,10 +1,9 @@
-import asyncio
-import json
-import os
-import pika
 from pika.adapters.asyncio_connection import AsyncioConnection
 from dotenv import load_dotenv
 from db.mongodb_manager import MongoDBManager
+import asyncio
+import os
+import pika
 
 load_dotenv()
 
@@ -12,27 +11,15 @@ async def init_mongodb():
     await MongoDBManager.create_connection(
         os.getenv("MONGODB_STRING_CONNECTION"), os.getenv("MONGODB_DATABASE")
     )
-
-async def insert_document(collection, data):
-    print(data)
-    exist_preview_answers = await collection.find_one({"form_id": data["form_id"]})
     
-    if (exist_preview_answers):
-        form_id = data["form_id"]
-        data.pop("form_id", None)
-        await collection.update_one({"form_id": form_id}, {"$push": {"answers": {"$each": data["answers"]}}})
-        return
-        
-    await collection.insert_one(data)
+async def update_metrics(form):
+    pass
 
 def callback(ch, method, properties, body):
     try:
         collection = MongoDBManager.get_collection(os.getenv("MONGODB_COLLECTION"))
-        data = json.loads(body.decode("utf-8"))
-
-        asyncio.get_running_loop().create_task(insert_document(collection, data))
-
-        print(f" [x] Document inserted in MongoDB")
+        form_id = body.decode("utf-8")
+        asyncio.get_running_loop().create_task(update_metrics(collection, form_id))
     except Exception as e:
         print(f"Error processing message: {e}")
 
@@ -50,11 +37,11 @@ async def init_listen_rabbitmq():
     )
 
     def on_connection_open(connection):
-        print("[RabbitMQ - Processor] Broker connection successfully")
+        print("[RabbitMQ - Metrics] Broker connection successfully")
         connection.channel(on_open_callback=on_channel_open)
 
     def on_channel_open(channel):
-        print("[RabbitMQ - Processor] Channel opened")
+        print("[RabbitMQ - Metrics] Channel opened")
         channel.queue_declare(queue=os.getenv("RABBITMQ_QUEUE"))
         channel.basic_consume(
             queue=os.getenv("RABBITMQ_QUEUE"),
@@ -73,4 +60,9 @@ async def main():
     await init_listen_rabbitmq()
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    try:
+        asyncio.run(main()) 
+    except KeyboardInterrupt:
+        exit()
+    except:
+        print("Unable to perform Action")

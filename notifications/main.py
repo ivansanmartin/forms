@@ -101,11 +101,11 @@ async def init_listen_rabbitmq():
     )
 
     def on_connection_open(connection):
-        print("[RabbitMQ] Broker connection successfully")
+        print("[RabbitMQ - Notifications] Broker connection successfully")
         connection.channel(on_open_callback=on_channel_open)
 
     def on_channel_open(channel):
-        print("[RabbitMQ] Channel opened")
+        print("[RabbitMQ - Notifications] Channel opened")
         channel.queue_declare(queue=os.getenv("RABBITMQ_QUEUE"))
         channel.basic_consume(
             queue=os.getenv("RABBITMQ_QUEUE"),
